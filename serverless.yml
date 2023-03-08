@@ -1,0 +1,115 @@
+# Welcome to Serverless!
+#
+# This file is the main config file for your service.
+# It's very minimal at this point and uses default values.
+# You can always add more config options for more control.
+# We've included some commented out config examples here.
+# Just uncomment any of them to get that config option.
+#
+# For full config options, check the docs:
+#    docs.serverless.com
+#
+# Happy Coding!
+
+service: myserverlessproject
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  runtime: nodejs12.x
+  profile: serverlessUser
+  region: ap-south-1
+  environment: 
+    tableName: ${self:custom.tableName}
+    bucketName: ${self:custom.bucketName}
+  iamRoleStatements:
+    - Effects: Allow
+      Action:
+         - dynamodb:*
+         - s3:*
+      Resource: '*'  
+  # apiKeys:
+  #   - free:
+  #      - myFreeAPIKEY
+  #   - paid:
+  #      - myPaidAPIKEY
+  # usagePlan:
+  #    - free:
+  #       quota:
+  #           limit: 1000
+  #           period: MONTH
+  #       throttle:
+  #           ratelimit: 5
+  #           burstlimit: 20
+
+plugins:
+  - serverless-s3-sync
+  - serverless-webpack
+
+package:
+    individually: true
+
+custom:
+  tableName: player-points
+  bucketName: myserverlessprojectuploadserver-123123
+  s3Sync:
+   - bucketName: ${self:custom.bucketName}
+     localDir: UploadData
+
+
+functions:
+  getUser:
+    handler: lambdas/endpoints/getUser.handler
+    events:
+        - http:
+            path: get-user/{ID}
+            method: GET
+            cors: true
+            # when API is create private: true
+  getPlayerScore:
+    handler: lambdas/endpoints/getPlayerScore.handler
+    events:
+        - http:
+            path: get-player-score/{ID}
+            method: GET
+            cors: true
+  createPlayerScore:
+    handler: lambdas/endpoints/createPlayerScore.handler
+    events:
+     - http:
+        path: create-player-score/{ID}
+        method: POST
+        cors: true
+  createFile:
+    handler: lambdas/endpoints/createFile.handler
+    events:
+     - http:
+        path: create-file/{fileName}
+        method: POST
+        cors: true
+  getFile:
+    handler: lambdas/endpoints/getFile.handler
+    events:
+     - http:
+        path: get-file/{fileName}
+        method: GET
+        cors: true      
+
+resources:
+   Resources:
+     DemoBucketUpload:
+      Type: AWS::S3::Bucket
+      Properties:
+        TableName: ${self:custom.tableName}
+        BucketName: ${self:custom.bucketName}
+      MyDynamoDbTable:
+        Type: AWS::DynamoDB::Table
+        Properties:
+          TableName:
+          AttributeDefinations:
+               - AttributionName: ID   
+               - AttributionType: S
+          KeySchema:
+              - AttributeName: ID
+                KeyType: HASH
+          BillingMode: PAY_PAR_REQUEST           
